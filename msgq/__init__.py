@@ -1,7 +1,9 @@
-from msgq.ipc_pyx import Context, Poller, SubSocket, PubSocket, SocketEventHandle, toggle_fake_events, \
-                                set_fake_prefix, get_fake_prefix, delete_fake_prefix, wait_for_one_event
+from msgq.ipc_pyx import Context, Poller, SubSocket, PubSocket, SocketEventHandle, get_fake_prefix, wait_for_one_event
+from msgq.ipc_pyx import toggle_fake_events as _toggle_fake_events, set_fake_prefix as _set_fake_prefix, \
+                         delete_fake_prefix as _delete_fake_prefix
 from msgq.ipc_pyx import MultiplePublishersError, IpcError
 
+import os
 from typing import Optional, List, Union
 
 __all__ = [
@@ -28,6 +30,27 @@ __all__ = [
 NO_TRAVERSAL_LIMIT = 2**64-1
 
 context = Context()
+
+
+# The C++ side sets CEREAL_FAKE* in the C environment; mirror them into os.environ, which is what a spawned
+# child process inherits on Windows (a forked one inherits both).
+def toggle_fake_events(enabled: bool) -> None:
+  _toggle_fake_events(enabled)
+  if enabled:
+    os.environ["CEREAL_FAKE"] = "1"
+  else:
+    os.environ.pop("CEREAL_FAKE", None)
+
+def set_fake_prefix(prefix: str) -> None:
+  _set_fake_prefix(prefix)
+  if prefix:
+    os.environ["CEREAL_FAKE_PREFIX"] = prefix
+  else:
+    os.environ.pop("CEREAL_FAKE_PREFIX", None)
+
+def delete_fake_prefix() -> None:
+  _delete_fake_prefix()
+  os.environ.pop("CEREAL_FAKE_PREFIX", None)
 
 
 def fake_event_handle(endpoint: str, identifier: Optional[Union[str, bytes]] = None, override: bool = True, enable: bool = False) -> SocketEventHandle:
