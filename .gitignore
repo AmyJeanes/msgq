@@ -20,3 +20,7 @@ libmessaging.*
 libmessaging_shared.*
 .sconsign.dblite
 .mypy_cache/
+# Windows build outputs
+*.pyd
+*.exe
+*.dll

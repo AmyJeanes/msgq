@@ -5,6 +5,10 @@
 #include <string>
 #include <atomic>
 
+// Directory holding the queue and buffer files; on Windows those are memory
+// sections and only the visionipc sockets live here
+std::string msgq_shm_dir();
+
 #define DEFAULT_SEGMENT_SIZE (1 * 1024 * 1024)
 #define NUM_READERS 25
 #define ALIGN(n) ((n + (8 - 1)) & -8)
@@ -30,6 +34,9 @@ struct msgq_queue_t {
   std::atomic<uint64_t> *read_valids[NUM_READERS];
   std::atomic<uint64_t> *read_uids[NUM_READERS];
   char * mmap_p;
+#ifdef _WIN32
+  void * section;  // handle that keeps the section's name alive
+#endif
   char * data;
   size_t size;
   int reader_id;
