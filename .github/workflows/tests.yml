@@ -8,14 +8,31 @@ on:
 
 jobs:
   test:
-    name: ./test.sh
+    name: ./test.sh (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ['macos-latest', 'ubuntu-latest', 'ubuntu-24.04-arm']
+        include:
+          - os: macos-latest
+          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm
+          - os: windows-latest
+            shell: msys2 {0}
+            timeout: 5  # the build and the install test take longer on the 4-core GitHub-hosted runner
+    defaults:
+      run:
+        shell: ${{ matrix.shell || 'bash -e {0}' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: CLANG64
+          path-type: inherit  # uv and Git for Windows stay visible
+          install: mingw-w64-clang-x86_64-clang  # for scons
+      - uses: astral-sh/setup-uv@v5
+        if: runner.os == 'Windows'
       - run: ./test.sh
-        timeout-minutes: 1
+        timeout-minutes: ${{ matrix.timeout || 1 }}

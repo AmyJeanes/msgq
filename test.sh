@@ -16,10 +16,11 @@ lefthook run test
 (
   TEST_DIR=$(mktemp -d)
   trap 'rm -rf "$TEST_DIR"' EXIT
-  uv venv --python "$DIR/.venv/bin/python" "$TEST_DIR/.venv"
-  uv pip install --python "$TEST_DIR/.venv/bin/python" "$DIR"
+  uv venv --python "$DIR/.venv/$VENV_BIN/python$EXE" "$TEST_DIR/.venv"
+  TEST_PYTHON="$TEST_DIR/.venv/$VENV_BIN/python$EXE"
+  uv pip install --python "$TEST_PYTHON" "$DIR"
   cd "$TEST_DIR"
-  "$TEST_DIR/.venv/bin/python" -m unittest msgq.tests.test_messaging
+  "$TEST_PYTHON" -m unittest msgq.tests.test_messaging
 )
 
 # *** all done ***
